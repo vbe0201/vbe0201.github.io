@@ -12,6 +12,15 @@ layout: compress
     const body = document.body;
     const data = body.getAttribute("data-theme");
 
+    function loadRandomPost() {
+      const posts = [
+        {% for post in site.posts %} "{{ post.url }}", {% endfor %}
+      ];
+
+      let randomPost = posts[Math.floor(posts.length * Math.random())];
+      location.replace(randomPost);
+    }
+
     const initTheme = (state) => {
       if (state === "dark") {
         body.setAttribute("data-theme", "dark");
@@ -33,8 +42,8 @@ layout: compress
       <div class="not-found">
         <div class="container">
           <div class="title">404</div>
-          <p class="phrase">😕 Hmm... Seems you lost from my journey.</p>
-          <a class="solution" href="{{ site.url }}">back home</a>
+          <p class="phrase">This is a dead-end. Nothing to see here. 🕵️</p>
+          Go check out <a class="solution" href="javascript:loadRandomPost()">this post</a> instead.
         </div>
       </div>
     </main>  
