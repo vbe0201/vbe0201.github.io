@@ -34,7 +34,7 @@ reveals that the game was built in the popular game engine [Unity](https://unity
 provides rich scripting for games in C# through Mono, so my first though was "this is going to be
 a piece of cake".
 
-![File system structure](./filesystem.png)
+![File system structure](/unity-reversing-case-study-among-us/filesystem.png)
 
 But turns out, the Among Us developers had other plans for us! They made use of a Unity feature called
 [IL2CPP](https://docs.unity3d.com/Manual/IL2CPP.html) which compiles the C# Assembly logic of the game's
@@ -47,7 +47,7 @@ which is just an entrypoint to the Unity runtime by calling `UnityMain` from the
 So I did some more research about IL2CPP on the interwebs and learned that `GameAssembly.dll` is what contains
 the actual game logic.
 
-![WinMain function of the Among Us.exe](./winmain.png)
+![WinMain function of the Among Us.exe](/unity-reversing-case-study-among-us/winmain.png)
 
 ### Reversing GameAssembly.dll
 
@@ -55,7 +55,7 @@ At the same time, I came across [Il2CppInspector](https://github.com/djkaty/Il2C
 which is capable of restoring class, function and type information for the `GameAssembly.dll` C++ logic,
 which is a MASSIVE time saver over trying to do this by hand.
 
-![Il2CppInspector Usage](./il2cppinspector.png)
+![Il2CppInspector Usage](/unity-reversing-case-study-among-us/il2cppinspector.png)
 
 We can feed it the `GameAssembly.dll` along with the `Among Us_Data/il2cpp_data/Metadata/global-metadata.dat`
 file and it exports the resources we need to get proper analysis of `GameAssembly.dll` inside Ghidra.
@@ -76,7 +76,7 @@ that most of the networking is done by a class called `InnerNetClient`. With a c
 methods that seem like they could do some networking, e.g. `InnerNetClient#KickUser`, we'll notice the
 usage of a `MessageWriter` instance to outline a message definition.
 
-![MessageWriter use for serializing a Kick packet](./messagewriter.png)
+![MessageWriter use for serializing a Kick packet](/unity-reversing-case-study-among-us/messagewriter.png)
 
 Something that immediately hits the eye is the encapsulation of `MessageWriter#StartMessage`, followed by
 packet data serialization, terminated by `MessageWriter#EndMessage`. After that, the `MessageWriter` object
@@ -95,12 +95,12 @@ that we're looking at (and thus gives hints about how to parse the follow-up dat
 This can be further visualized through a Wireshark scan, which reveals further details (such as the use of UDP
 for communication).
 
-![Among Us Wireshark Scan](./wireshark.png)
+![Among Us Wireshark Scan](/unity-reversing-case-study-among-us/wireshark.png)
 
 We see the sequence `22 00` which turns into `0x22` bytes analogously to `Data (34 bytes)`. This is correct!
 The following type flag is `0`...
 
-![InnerNetClient HostGame](./hostgame.png)
+![InnerNetClient HostGame](/unity-reversing-case-study-among-us/hostgame.png)
 
 ...which matches the implementation of `InnerNetClient#HostGame`!! This serves us as instructions on how to
 identify and learn every game packet we don't know about yet.
@@ -116,7 +116,7 @@ good explanation.
 
 #### Serializing Integers
 
-![MessageWriter Write Halfword](./write_halfword.png)
+![MessageWriter Write Halfword](/unity-reversing-case-study-among-us/write_halfword.png)
 
 We have different methods for serializing 8-bit, 16-bit and 32-bit signed and unsigned integers. All of the
 formats (except byte, obviously) are written in little-endian byteorder to the internal buffer maintained by
@@ -124,7 +124,7 @@ the `MessageWriter` instance.
 
 #### Serializing Floating-Point Numbers
 
-![MessageWriter Write Single](./write_single.png)
+![MessageWriter Write Single](/unity-reversing-case-study-among-us/write_single.png)
 
 Floating-point numbers are represented through the [`Single`](https://docs.microsoft.com/de-de/dotnet/api/system.single?view=net-5.0)
 structure on the C# side. In contrast to the integer approach, these are written as bytes in big-endian order.
@@ -141,7 +141,7 @@ the raw data.
 
 #### The Packing Algorithm
 
-![MessageWriter WritePacked](./packing.png)
+![MessageWriter WritePacked](/unity-reversing-case-study-among-us/packing.png)
 
 For certain purposes in Among Us, e.g. packing Player IDs, a packing algorithm is applied to 32-bit integers.
 
