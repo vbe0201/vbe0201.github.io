@@ -24,7 +24,7 @@ author:
 
 # URL settings
 url: "https://vales.tech-shit.wtf"
-baseurl:
+baseurl: /
 permalink: /:title/
 google_analytics: G-F7EKRB3ZJ4
 fb_appid:
