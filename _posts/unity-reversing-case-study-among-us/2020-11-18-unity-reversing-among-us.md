@@ -31,7 +31,7 @@ think about these things from the perspective of a developer or hacker rather th
 
 An initial look into the installation directory of the game (in my case, a copy for messing around)
 reveals that the game was built in the popular game engine [Unity](https://unity.com/de). Unity
-provides rich scripting for games in C# through Mono, so my first though was "this is going to be
+provides rich scripting for games in C# through Mono, so my first thought was "this is going to be
 a piece of cake".
 
 ![File system structure](/assets/img/unity-reversing-case-study-among-us/filesystem.png){:class="img-responsive"}
@@ -103,7 +103,7 @@ The following type flag is `0`...
 ![InnerNetClient HostGame](/assets/img/unity-reversing-case-study-among-us/hostgame.png){:class="img-responsive"}
 
 ...which matches the implementation of `InnerNetClient#HostGame`!! This serves us as instructions on how to
-identify and learn every game packet we don't know about yet.
+find and learn every game packet we don't know about yet.
 
 *...Again such funky names...*
 
@@ -119,7 +119,7 @@ good explanation.
 ![MessageWriter Write Halfword](/assets/img/unity-reversing-case-study-among-us/write_halfword.png){:class="img-responsive"}
 
 We have different methods for serializing 8-bit, 16-bit and 32-bit signed and unsigned integers. All of the
-formats (except byte, obviously) are written in little-endian byteorder to the internal buffer maintained by
+formats (except byte, obviously) are written in little-endian byte order to the internal buffer maintained by
 the `MessageWriter` instance.
 
 #### Serializing Floating-Point Numbers
@@ -161,5 +161,5 @@ of Unity internals. This provides enough information to implement the client pro
 for server packets, one can learn about server-side messages and how a client is supposed to handle them.
 
 Parallel to that, there's a `InnerNetServer` class which contains networking logic for a server. Diving into this
-will reveal the information an open source game server reimplementation would need. A funny and educational project
+will reveal the information an open source game server reimplementation would need. A funny and interesting project
 idea, left as an exercise to the reader. 😉
