@@ -439,7 +439,7 @@ def prepare_plaintext():
 
 while True:
     plaintext = prepare_plaintext()
-    ciphertext = hovi_common_01_enc(aes, block)
+    ciphertext = hovi_common_01_enc(aes, plaintext)
 
     if u16(ciphertext) == FIRST_GADGET:
         print(f"Plaintext:  {hexlify(plaintext)}\nCiphertext: {hexlify(ciphertext)}\n")
