@@ -422,7 +422,7 @@ KEYGEN_SIG = unhexlify("892A36228D49E0484D480CB0ACDA0234")
 GENERATE_TSEC_KEY_RET = 0x929
 FIRST_GADGET = 0x94D
 
-def hovi_common_01_enc(aes, seed):
+def hovi_common_01_enc(seed):
     kek = AES.new(CSECRET_00, AES.MODE_ECB).encrypt(seed)  # Encrypt our seed with the csecret
     return AES.new(kek, AES.MODE_ECB).encrypt(KEYGEN_SIG)  # Encrypt the signature with the new KEK
 
@@ -439,7 +439,7 @@ def prepare_plaintext():
 
 while True:
     plaintext = prepare_plaintext()
-    ciphertext = hovi_common_01_enc(aes, plaintext)
+    ciphertext = hovi_common_01_enc(plaintext)
 
     if u16(ciphertext) == FIRST_GADGET:
         print(f"Plaintext:  {hexlify(plaintext)}\nCiphertext: {hexlify(ciphertext)}\n")
