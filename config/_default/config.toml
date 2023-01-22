@@ -3,7 +3,7 @@
 # https://blowfish.page/docs/getting-started/
 
 theme = "blowfish"
-#baseURL = "https://blog.obscure.technology/"
+baseURL = "https://blog.obscure.technology/"
 defaultContentLanguage = "en"
 
 enableRobotsTXT = true
