@@ -1,0 +1,22 @@
+languageCode = "en"
+languageName = "English"
+displayName = "EN"
+isoCode = "en"
+weight = 1
+rtl = false
+
+title = "Vale's Blog"
+# logo = "img/logo.png"
+description = "A place where I share knowledge, thoughts and "
+
+dateFormat = "2 January 2006"
+
+[author]
+  name = "Valentin B."
+  image = "img/blowfish_logo.png"
+  headline = "Always messing with weird machines"
+  links = [
+   { email = "mailto:valentin.be@protonmail.com" },
+   { github = "https://github.com/vbe0201" },
+   { twitter = "https://twitter.com/iamwalleh" },
+  ]
