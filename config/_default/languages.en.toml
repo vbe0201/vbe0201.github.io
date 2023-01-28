@@ -14,7 +14,7 @@ dateFormat = "2 January 2006"
 [author]
   name = "Valentin B."
   image = "img/blowfish_logo.png"
-  headline = "Always messing with weird machines"
+  headline = "Messing with weird machines"
   links = [
    { email = "mailto:valentin.be@protonmail.com" },
    { github = "https://github.com/vbe0201" },
