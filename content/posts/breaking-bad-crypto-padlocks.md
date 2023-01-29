@@ -314,10 +314,11 @@ This is optimal for TCP-based protocols where delivery of every packet in order 
 ## Conclusions
 
 That concludes the journey for today. We reverse-engineered the transport encryption that prevented
-communication with the server except through the official client.
+communication with the server except through the official client. Much love to all the folks who
+helped make it happen.
 
 At this point I'm not sure of the goal of all this - prevent packet injection? Obfuscate the
-interface to make analysis harder? Protect against cheaters? Probably a bit of all of them
+interface to make analysis harder? Protect against cheaters? Probably a bit of everything
 yet nothing worked out.
 
 Nonetheless, I personally hope the knowledge and code samples are put to good use. I'd love to see
