@@ -5,9 +5,9 @@ tags: [reversing, crypto]
 draft: false
 ---
 
-Some time around 2020/21, I began to build a server implementation for said game after some prior
-work on GitHub helped kickstart the efforts. Soon enough, more people with aligned interests were
-gathered and we bounced information on various technical aspects of said game.
+Some time around 2020/21, I began to build a server implementation for a certain game after some
+prior work on GitHub helped kickstart the efforts. Soon enough, more people with aligned interests
+were gathered and we bounced information on various technical aspects of said game.
 
 Eventually we had most of the obscure details worked out...except for their network transport
 encryption. And if you know *anything* about crypto in video games you rightly suspect bad things
