@@ -3,8 +3,9 @@
 # https://blowfish.page/docs/getting-started/
 
 theme = "blowfish"
-baseURL = "//blog.obscure.technology/"
+baseURL = "https://vbe0201.github.io/"
 defaultContentLanguage = "en"
+relativeURLs = true
 
 enableRobotsTXT = true
 paginate = 20
