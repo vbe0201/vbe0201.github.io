@@ -1,22 +1,22 @@
+disabled = false
 languageCode = "en"
 languageName = "English"
-displayName = "EN"
-isoCode = "en"
 weight = 1
-rtl = false
-
 title = "Vale's Blog"
-# logo = "img/logo.png"
-description = "A place where I share knowledge, thoughts and "
 
-dateFormat = "2 January 2006"
+[params]
+  displayName = "EN"
+  isoCode = "en"
+  rtl = false
+  dateFormat = "2 January 2006"
 
-[author]
+[params.author]
   name = "Valentin B."
-  image = "img/blowfish_logo.png"
-  headline = "Messing with weird machines"
+  email = "valentin.be@protonmail.com"
+  headline = "I like all things low-level"
   links = [
    { email = "mailto:valentin.be@protonmail.com" },
    { github = "https://github.com/vbe0201" },
-   { twitter = "https://twitter.com/iamwalleh" },
   ]
+
+description = "A place where I share knowledge, thoughts and opinions"

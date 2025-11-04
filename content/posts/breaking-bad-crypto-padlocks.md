@@ -295,7 +295,7 @@ will inevitably [lead to doom](https://moxie.org/2011/12/13/the-cryptographic-do
 In fact, many libraries are tailored around this fact and don't grant access to plaintexts
 before the authenticity and integrity of the message was verified. Some candidates like
 [CryptoPP](https://github.com/weidai11/cryptopp) however behave just like an ordinary CTR cipher
-on repeated calls to `ProcessData`... :face_with_symbols_over_mouth:
+on repeated calls to `ProcessData`... :cursing_face:
 
 #### Reordering and Truncating
 
@@ -326,4 +326,4 @@ more amazing projects of the likes of custom clients, datamining and analysis to
 reverse engineering efforts happen!
 
 > Also: If you recognize `scramble_buffer` or some variant of it and know if it's any algorithm
-  that was seen in the wild before, I'm dying to learn where. :face_with_monocle:
+  that was seen in the wild before, I'm dying to learn where. :monocle_face:

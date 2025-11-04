@@ -5,29 +5,41 @@
 # Refer to the theme docs for more details about each of these parameters.
 # https://blowfish.page/docs/configuration/#theme-parameters
 
-colorScheme = "blowfish"
+colorScheme = "github"
 defaultAppearance = "dark"
 autoSwitchAppearance = true
 
+enableA11y = false
 enableSearch = true
 enableCodeCopy = true
+
+replyByEmail = true
 
 # mainSections = ["section1", "section2"]
 # robots = ""
 
-# disableImageOptimization = false
+disableImageOptimization = false
+disableImageOptimizationMD = false
+disableTextInHeader = false
+# backgroundImageWidth = 1200
 
-# defaultBackgroundImage = "IMAGE.jpg" # used as default for background images 
+# defaultBackgroundImage = "IMAGE.jpg" # used as default for background images
+# defaultFeaturedImage = "IMAGE.jpg" # used as default for featured images in all articles
+# defaultSocialImage = "/android-chrome-512x512.png" # used as default for social media sharing (Open Graph and Twitter)
+hotlinkFeatureImage = false
+# imagePosition = "50% 50%"
 
 # highlightCurrentMenuArea = true
 # smartTOC = true
 # smartTOCHideUnfocusedChildren = true
 
+fingerprintAlgorithm = "sha512"
+
 [header]
   layout = "basic" # valid options: basic, fixed
 
 [footer]
- # showMenu = true
+  showMenu = true
   showCopyright = true
   showThemeAttribution = true
   showAppearanceSwitcher = true
@@ -48,8 +60,10 @@ enableCodeCopy = true
   showDate = true
   #showViews = true
   #showLikes = true
+  showDateOnlyInArticle = false
   showDateUpdated = false
-  showAuthor = true
+  showAuthor = false
+  # showAuthorBottom = false
   showHero = true
   heroStyle = "basic" # valid options: basic, big, background, thumbAndBackground
   layoutBackgroundBlur = false # only used when heroStyle equals background or thumbAndBackground
@@ -57,6 +71,7 @@ enableCodeCopy = true
   showBreadcrumbs = true
   showDraftLabel = true
   showEdit = false
+  # editURL = "https://github.com/vbe0201/vbe0201.github.io/"
   editAppendPath = true
   seriesOpened = false
   showHeadingAnchors = true
@@ -64,11 +79,15 @@ enableCodeCopy = true
   invertPagination = false
   showReadingTime = false
   showTableOfContents = true
-  showTaxonomies = true 
+  # showRelatedContent = false
+  # relatedContentLimit = 3
+  showTaxonomies = true # use showTaxonomies OR showCategoryOnly, not both
+  showCategoryOnly = false # use showTaxonomies OR showCategoryOnly, not both
   showAuthorsBadges = false 
   showWordCount = false
   showSummary = true
   sharingLinks = [ "linkedin", "twitter", "reddit", "pinterest", "facebook", "email"]
+  showZenMode = false
 
 [list]
   #showHero = true
@@ -81,34 +100,35 @@ enableCodeCopy = true
   #showLikes = true
   showTableOfContents = false
   showCards = false
+  orderByWeight = false
   groupByYear = true
   cardView = false
   cardViewScreenWidth = false
   constrainItemsWidth = false
 
 [sitemap]
-  excludedKinds = []
+  excludedKinds = ["taxonomy", "term"]
 
 [taxonomy]
   showTermCount = true
-  #showHero = true
-  #heroStyle = "background" # valid options: basic, big, background, thumbAndBackground
+  showHero = false
+  # heroStyle = "background" # valid options: basic, big, background, thumbAndBackground
   showBreadcrumbs = false
-  #showViews = false
-  #showLikes = false
-  #showTableOfContents = true
-  #cardView = false
+  showViews = false
+  showLikes = false
+  showTableOfContents = false
+  cardView = false
 
 [term]
-  #showHero = true
-  #heroStyle = "background" # valid options: basic, big, background, thumbAndBackground
+  showHero = false
+  # heroStyle = "background" # valid options: basic, big, background, thumbAndBackground
   showBreadcrumbs = false
-  #showViews = false
-  #showLikes = false
-  #showTableOfContents = true
-  #groupByYear = false
-  #cardViewScreenWidth = false
-  #cardView = false
+  showViews = false
+  showLikes = false
+  showTableOfContents = true
+  groupByYear = false
+  cardView = false
+  cardViewScreenWidth = false
 
 [firebase]
   # apiKey = "XXXXXX"
@@ -123,6 +143,17 @@ enableCodeCopy = true
   # site = "ABC12345"
   # domain = "llama.yoursite.com"
 
+[umamiAnalytics]
+  # websiteid = "ABC12345"
+  # domain = "llama.yoursite.com"
+  # dataDomains = "yoursite.com,yoursite2.com"
+  # scriptName = ""
+  # enableTrackEvent = true
+
+[selineAnalytics]
+  # token = "XXXXXX"
+  # enableTrackEvent = true
+
 [buymeacoffee]
   # identifier = ""
   # globalWidget = true
@@ -135,3 +166,10 @@ enableCodeCopy = true
   # bing = ""
   # pinterest = ""
   # yandex = ""
+
+[rssnext]
+  # feedId = ""
+  # userId = ""
+
+[advertisement]
+  # adsense = ""
