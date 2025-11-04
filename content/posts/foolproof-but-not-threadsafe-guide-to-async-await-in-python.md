@@ -1,5 +1,5 @@
 ---
-title: "No Bullshit Guide to async/await in Python"
+title: "Foolproof but not Thread-Safe Guide to async/await in Python"
 date: 2025-11-04T15:28:31+01:00
 tags: [python, async, programming, io]
 draft: false
