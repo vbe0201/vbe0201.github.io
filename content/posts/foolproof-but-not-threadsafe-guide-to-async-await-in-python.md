@@ -775,11 +775,12 @@ async def main():
     server.listen()
     server.setblocking(False)
 
-    while True:
-        await minio.wait_readable(server)
-        conn, _ = server.accept()
+    with server:
+        while True:
+            await minio.wait_readable(server)
+            conn, _ = server.accept()
 
-        await minio.spawn(serve(conn))
+            await minio.spawn(serve(conn))
 
 minio.run(main())
 ```
