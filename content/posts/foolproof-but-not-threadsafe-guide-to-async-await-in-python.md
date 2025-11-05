@@ -10,7 +10,8 @@ but I promise this one is worth it...at least if you're part of a specific
 audience wanting to know how coroutines actually work under the hood.
 
 Today we're going to build `minio`, a tiny `asyncio` clone from scratch for
-teaching purposes.
+teaching purposes. First things first, [here](https://gist.github.com/vbe0201/cce570c733c70e06ff62dc60597c5e6d)
+is the full source code for your reference.
 
 ## `async` and why we have it
 
@@ -223,6 +224,31 @@ Traceback (most recent call last):
 StopIteration
 ```
 
+Just take a look at what replicating this magic would look like.
+
+```py
+>>> def a():
+...     yield
+...
+>>> await a()
+Traceback (most recent call last):
+  File "/nix/store/xphki1psg7lc0ixpm80n9l866cdfcy3k-python3-3.14.0rc3/lib/python3.14/concurrent/futures/_base.py", line 450, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/nix/store/xphki1psg7lc0ixpm80n9l866cdfcy3k-python3-3.14.0rc3/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
+    raise self._exception
+  File "<python-input-1>", line 1, in <module>
+    await a()
+TypeError: 'generator' object can't be awaited
+>>> # Here comes the magic:
+>>> a.__code__ = a.__code__.replace(co_flags=a.__code__.co_flags | 0x100)
+>>> await a()
+```
+
+Yep, it's really just an internal flag that prevents generators and coroutines
+to be used interchangeably. No promises that it works with whatever Python version
+you will be using at the time of reading though.
+
 But the important takeaway here is: **Every await may be suspended by a yield at
 some point down the line.**
 
@@ -235,14 +261,13 @@ We're going to implement some important cornerstones:
   `await`er. This would be the coroutine passed to `minio.run()` but also the
   background tasks we're going to implement later.
 
-- A mechanism for calling into the event loop without needing access to the
-  runtime's internal state. We use the `_runtime_call` coroutine for this
-  which suspends execution and passes a message of the form `(event, arg)`
-  to the event loop.
+- A mechanism for our coroutines to be able to call into the event loop
+  without needing access to the runtime's internal state. We use the
+  `_runtime_call` helper for this which suspends execution and passes a
+  message of the form `(event, arg)` to the event loop.
 
-- The event loop itself. It takes Tasks from a queue of Tasks ready to run,
-  executes them until suspension, and processes the runtime call that was
-  made.
+- The event loop itself. It drains a queue of Tasks ready to run, executes
+  them until suspension, and processes the runtime call that was made.
 
   When any of the subsequent sections introduce a new type of runtime call,
   assume the handler method is registered to the `handlers` dictionary.
@@ -257,9 +282,13 @@ class Task:
         self.call_result = None
         self.result = None
 
+    def wake(self):
+        # Resume our coro until next suspension.
+        return self.coro.send(self.call_result)
+
 @types.coroutine
 def _runtime_call(event, value):
-    call_result = yield (event, value)
+    call_result = yield event, value
     return call_result
 
 class Runtime:
@@ -276,7 +305,7 @@ class Runtime:
         while self.run_queue:
             task = self.run_queue.popleft()
             try:
-                event, arg = task.coro.send(task.call_result)
+                event, arg = task.wake()
 
             except StopIteration as e:
                 task.result = e.value
@@ -317,10 +346,10 @@ Traceback (most recent call last):
   File "<python-input-4>", line 1, in <module>
     minio.run(a())
     ~~~~~~~~~^^^^^
-  File "/home/vale/Coding/vbe0201.github.io/minio.py", line 53, in run
+  File "/tmp/minio.py", line 53, in run
     return rt.run(coro)
            ~~~~~~^^^^^^
-  File "/home/vale/Coding/vbe0201.github.io/minio.py", line 32, in run
+  File "/tmp/minio.py", line 32, in run
     event, arg = task.coro.send(task.call_result)
                  ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
   File "<python-input-2>", line 2, in a
@@ -421,7 +450,13 @@ class JoinHandle:
     def __await__(self):
         # "I want to wait until self.task finishes"
         yield from _runtime_call("join", self.task)
+        return self.task.result
 ```
+
+We introduce a new `"join"` event type which waits for a certain
+`Task` object to complete. When that has happened, the coroutine
+awaiting the `JoinHandle` will be resumed and can access the
+result of the Task.
 
 As for the event loop itself, we must support the new event type and
 also inject a `JoinHandle` as the call result to `spawn()`:
@@ -448,6 +483,7 @@ so waiters get added to the run queue when a task completes:
     except StopIteration as e:
         task.result = e.value
         self.run_queue.extend(task.waiters)  # !
+        task.waiters.clear()
 ```
 
 Now let's test our changes:
@@ -457,13 +493,15 @@ Now let's test our changes:
 >>>
 >>> async def bg(num):
 ...     print(f"I am background task {num}")
+...     return num
 ...
 >>> async def main():
 ...     print("entering main()")
+...     res = 0
 ...     for i in range(10):
 ...         jh = await minio.spawn(bg(i))
-...         await jh
-...     print("main() done")
+...         res += await jh
+...     print(f"{res=}")
 ...
 >>> minio.run(main())
 entering main()
@@ -477,7 +515,7 @@ I am background task 6
 I am background task 7
 I am background task 8
 I am background task 9
-main() done
+res=45
 ```
 
 See the difference? Now we don't have `main()` completing before the
@@ -586,14 +624,39 @@ from the builtin `socket` module because that is the low-level
 building block from the operating system.
 
 But wait, those APIs are blocking. And we dislike blocking code.
-So for my next trick I'll just make them...not blocking. And I
+So for our next trick we'll just make them...not blocking. And I
 mean it quite literally, we can call the `.setblocking(False)`
-method and the world will be healed.
+method on a socket and the world will be healed.
 
-That is only half of the story though. What it does is it will cause
-these APIs to return early when we'd have to wait for the operation
-to complete. So are we just supposed to test the same operation over
-and over again until eventually one succeeds?
+That is only half of the story though. Look what happens now if we
+try to read from a nonblocking socket that has no data:
+
+```py
+Traceback (most recent call last):
+  File "/tmp/minio_echo_server.py", line 27, in <module>
+    minio.run(main())
+    ~~~~~~~~~^^^^^^^^
+  File "/tmp/minio.py", line 160, in run
+    return rt.run(coro)
+           ~~~~~~^^^^^^
+  File "/tmp/minio.py", line 124, in run
+    event, arg = task.coro.send(task.call_result)
+                 ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/tmp/minio_echo_server.py", line 23, in main
+    conn, _ = server.accept()
+              ~~~~~~~~~~~~~^^
+  File "/nix/store/xphki1psg7lc0ixpm80n9l866cdfcy3k-python3-3.14.0rc3/lib/python3.14/socket.py", line 298, in accept
+    fd, addr = self._accept()
+               ~~~~~~~~~~~~^^
+BlockingIOError: [Errno 11] Resource temporarily unavailable
+```
+
+We will just get a `BlockingIOError` instead to let us know that
+blocking would be required here to fulfill the operation. :confused:
+
+Are we just supposed to test the same call over and over again until
+we don't get the `BlockingIOError` anymore? Surely there has to be
+a better way.
 
 Thankfully we are loved by the makers of our operating systems because
 they bless us with APIs where we can register interest in a socket
@@ -606,14 +669,45 @@ wrapper for these APIs.
 
 ### Adding Runtime support
 
-Now the first step is, again to make our `Runtime` play with it.
+The idea behind `selectors` is relatively straightforward: We're going
+to have an instance of a selector object in `Runtime`, then we register
+our socket object to tell it we're waiting for it to become either readable
+or writable. And then we're going to need to call `selector.select()` which
+will inform us when any of the events we registered occur.
+
+Let's introduce some new APIs which allow us to wait for a nonblocking
+socket to become readable and writable. We turn to none other than our
+runtime call system for this.
 
 ```py
-# ...
-from selectors import DefaultSelector, EVENT_READ, EVENT_WRITE
+async def _wait_readable(fileobj):
+    return await _runtime_call("io", (EVENT_READ, fileobj))
 
-# ...
+async def _wait_writable(fileobj):
+    return await _runtime_call("io", (EVENT_WRITE, fileobj))
+```
 
+To say this is barebones is an understatement, but we will see
+how this is applied to do useful things. And the corresponding
+event handler:
+
+```py
+    def handle_io(self, task, data):
+        # Register interest in the fileobj becoming readable
+        # or writable. We attach the waiting Task to the map
+        # so that we can associate every notification to the
+        # Task it is meant for in the event loop.
+        event, fileobj = data
+        self.selector.register(fileobj, event, task)
+
+        task.call_result = None
+```
+
+Sweet. Now that we can register interest in a socket becoming
+readable or writable, we also need to listen for these events
+to occur.
+
+```py
 class Runtime:
     def __init__(self):
         # ...
@@ -641,8 +735,9 @@ class Runtime:
 ```
 
 Now that is quite something. Our `selector` maintains a mapping
-of file objects to selector keys. So as long as that mapping is
-non-empty, there will be `Task`s blocked on I/O (`selector.get_map()`).
+of registered file objects to selector keys. So as long as this
+mapping is non-empty, there will be `Task`s blocked on I/O
+(`selector.get_map()`).
 
 If the run queue is empty, we need to wait for I/O or timers.
 We do that with a `selector.select()` call using the timer closest
@@ -653,40 +748,11 @@ tasks for execution and unregister our interest in notifications
 (because now we can perform the operation without needing to wait
 anymore).
 
-Now the last missing piece is we need to register interest in
-being notified when a file object becomes readable or writable.
-We turn to none other than our runtime call system.
-
-```py
-async def _wait_readable(fileobj):
-    return await _runtime_call("io", (EVENT_READ, fileobj))
-
-async def _wait_writable(fileobj):
-    return await _runtime_call("io", (EVENT_WRITE, fileobj))
-```
-
-And the appropriate handlers in `Runtime`:
-
-```py
-    def handle_io(self, task, data):
-        # Register interest in the fileobj becoming readable
-        # or writable. We attach the waiting Task to the map
-        # so that we can associate every notification to the
-        # Task it is meant for in the event loop.
-        event, fileobj = data
-        self.selector.register(fileobj, event, task)
-
-        task.call_result = None
-```
-
-To say this is barebones is an understatement, but we will see
-how this is applied to do useful things.
-
-## Wrapping up
+## Whispers in the Network
 
 Last but not least, we want our I/O abstraction to do something.
 What better way is there to wrap this journey up than to go back
-to what it started with.
+to what it started with - the classic echo server.
 
 ```py
 import minio
@@ -718,7 +784,7 @@ async def main():
 minio.run(main())
 ```
 
-The power of convenient abstractions, huh? But that is it for today.
+The power of convenient abstractions, huh? But that is it for this post.
 
 ## Conclusion
 
@@ -730,7 +796,5 @@ This is by no means complete or *the* reference for the real deal.
 But it provides a solid foundation to build upon and has taught you
 most of the relevant concepts that also appear in real runtimes.
 
-You can find the full source code for this post
-[here](https://gist.github.com/vbe0201/cce570c733c70e06ff62dc60597c5e6d).
-
-Until next time!
+Maybe this async stuff isn't all that magical and complicated after
+all. Until next time!
