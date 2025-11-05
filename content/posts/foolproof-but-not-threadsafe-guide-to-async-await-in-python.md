@@ -629,7 +629,8 @@ mean it quite literally, we can call the `.setblocking(False)`
 method on a socket and the world will be healed.
 
 That is only half of the story though. Look what happens now if we
-try to read from a nonblocking socket that has no data:
+try to accept a client connection on a server socket when nobody
+is trying to connect.
 
 ```py
 Traceback (most recent call last):
@@ -725,16 +726,15 @@ class Runtime:
                     self.run_queue.append(key.data)
                     self.selector.unregister(key.fileobj)
 
-            # Check if we have any elapsed timers to reap.
-            if self.timers:
-                for task in self.timers.get_elapsed():
-                    self.run_queue.append(task)
+            # Put elapsed timers in the run queue.
+            for task in self.timers.get_elapsed():
+                self.run_queue.append(task)
 
             # Same as before from here...
             task = self.run_queue.popleft()
 ```
 
-Now that is quite something. Our `selector` maintains a mapping
+This is quite something. Our `selector` maintains a mapping
 of registered file objects to selector keys. So as long as this
 mapping is non-empty, there will be `Task`s blocked on I/O
 (`selector.get_map()`).
@@ -764,8 +764,10 @@ async def serve(conn):
     await minio.wait_readable(conn)
     data = conn.recv(100)
 
-    await minio.wait_writable(conn)
-    conn.sendall(data)
+    while len(data) > 0:
+        await minio.wait_writable(conn)
+        sent = conn.send(data)
+        data = data[sent:]
 
     conn.close()
 
