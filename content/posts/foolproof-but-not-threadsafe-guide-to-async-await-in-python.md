@@ -681,10 +681,10 @@ socket to become readable and writable. We turn to none other than our
 runtime call system for this.
 
 ```py
-async def _wait_readable(fileobj):
+async def wait_readable(fileobj):
     return await _runtime_call("io", (EVENT_READ, fileobj))
 
-async def _wait_writable(fileobj):
+async def wait_writable(fileobj):
     return await _runtime_call("io", (EVENT_WRITE, fileobj))
 ```
 
