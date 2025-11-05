@@ -512,7 +512,7 @@ class TimerHeap:
 
     def get_elapsed(self):
         now = time.monotonic()
-        while self and self.next_deadline() < now:
+        while self and self.timers[0][0] < now:
             _, task = heappop(self.timers)
             yield task
 ```
